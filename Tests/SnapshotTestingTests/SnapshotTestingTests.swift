@@ -1203,6 +1203,40 @@ final class SnapshotTestingTests: XCTestCase {
     #endif
   }
 
+  #if os(iOS)
+  @available(iOS 13.0, *)
+  func testWKWebViewRepresentable_iOS() throws {
+    struct WKWebViewRepresentable: UIViewRepresentable {
+      typealias UIViewType = WKWebView
+
+      func makeUIView(context: Context) -> WKWebView {
+        return WKWebView()
+      }
+      
+      func updateUIView(_ uiView: WKWebView, context: Context) {
+        let fixtureUrl = URL(fileURLWithPath: String(#file), isDirectory: false)
+          .deletingLastPathComponent()
+          .appendingPathComponent("__Fixtures__/pointfree.html")
+        guard let html = try? String(contentsOf: fixtureUrl) else {
+          XCTFail("Unable to load fixture")
+          return
+        }
+        uiView.loadHTMLString(html, baseURL: nil)
+      }
+    }
+
+    let view = WKWebViewRepresentable().background(Color.yellow)
+
+    if !ProcessInfo.processInfo.environment.keys.contains("GITHUB_WORKFLOW") {
+      assertSnapshot(
+        of: view,
+        as: .image(layout: .fixed(width: 800, height: 600)),
+        named: platform
+      )
+    }
+  }
+  #endif
+
   #if os(iOS) || os(macOS)
     final class ManipulatingWKWebViewNavigationDelegate: NSObject, WKNavigationDelegate {
       func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
