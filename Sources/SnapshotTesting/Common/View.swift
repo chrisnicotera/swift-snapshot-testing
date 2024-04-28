@@ -868,12 +868,15 @@
                     callback(Image())
                     return
                   }
-                  let configuration = WKSnapshotConfiguration()
-                  if #available(iOS 13, macOS 10.15, *) {
-                    configuration.afterScreenUpdates = false
-                  }
-                  wkWebView.takeSnapshot(with: configuration) { image, _ in
-                    callback(image!)
+                  wkWebView.takeSnapshot(with: nil) { image, error in
+                    guard let image = image else {
+                      if let error = error {
+                        assertionFailure(error.localizedDescription)
+                      }
+                      callback(Image())
+                      return
+                    }
+                    callback(image)
                   }
                 }
               } else {
